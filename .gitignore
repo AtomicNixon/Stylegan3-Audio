@@ -15,3 +15,7 @@ data/
 # OS noise
 Thumbs.db
 desktop.ini
+
+# local launchers / logs
+run_*.bat
+*.log
