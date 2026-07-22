@@ -1,0 +1,12 @@
+# Stylegan3-Audio — direct dependencies.
+# Torch trio MUST match exactly (+cu118 builds) or Windows throws DLL load errors.
+# Full working-env snapshot: requirements-full.txt
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.7.1+cu118
+torchaudio==2.7.1+cu118
+torchvision==0.22.1+cu118
+demucs==4.0.1
+librosa==0.11.0
+numpy==2.2.6
+pillow==12.1.1
+matplotlib==3.10.8
