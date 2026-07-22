@@ -117,9 +117,17 @@ Model pickles are not in the repo (GitHub size limits). Grab official ones from
 `dnnlib/`, `torch_utils/`, `training/` and `legacy.py` are from
 [NVlabs/stylegan3](https://github.com/NVlabs/stylegan3), © NVIDIA Corporation,
 under the [NVIDIA Source Code License](https://github.com/NVlabs/stylegan3/blob/main/LICENSE.txt)
-(non-commercial research use). The audio-reactive layer (`stylegan3_audio.py`,
-`culture_shock.py`, `mixer_gui.py`): Bob and Verdent, 50/50, with a sliver
-reserved for whoever first thought to point a latent walk at a drum stem.
+(non-commercial research use).
+
+The audio-reactive concept and original `culture_shock.py` are by
+**[rolux](https://gist.github.com/rolux/48f1da6cf2bc6ca5833dbacbf852b348)**
+(2020, StyleGAN2/TF era, driven by the Death Grips "Culture Shock" stem
+release) — including the latent direction vectors, from
+[rolux.org](https://rolux.org/media/stylegan2/vectors/). Even the
+seed-from-sample-count trick is his. The sliver is a wedge.
+
+The StyleGAN3/PyTorch port, stem generalization, patchbay core, CLI and Mixer:
+Bob and Verdent, 50/50.
 
 Art Nixon (AtomicNixon) insists on zero credit. The music is his, the faces
 are his, the GPU is his, the thirteen CUDA toolkits of scar tissue are his,
