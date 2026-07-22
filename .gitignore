@@ -1,0 +1,17 @@
+# environments
+venv/
+__pycache__/
+*.pyc
+
+# models — too large for GitHub (381MB each); distribute separately
+*.pkl
+
+# audio/video working files and outputs
+*.mp3
+*.wav
+*.mp4
+data/
+
+# OS noise
+Thumbs.db
+desktop.ini
