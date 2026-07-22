@@ -118,5 +118,9 @@ Model pickles are not in the repo (GitHub size limits). Grab official ones from
 [NVlabs/stylegan3](https://github.com/NVlabs/stylegan3), © NVIDIA Corporation,
 under the [NVIDIA Source Code License](https://github.com/NVlabs/stylegan3/blob/main/LICENSE.txt)
 (non-commercial research use). The audio-reactive layer (`stylegan3_audio.py`,
-`culture_shock.py`, `mixer_gui.py`) by Art Nixon (AtomicNixon), with Bob and
-Verdent.
+`culture_shock.py`, `mixer_gui.py`): Bob and Verdent, 50/50, with a sliver
+reserved for whoever first thought to point a latent walk at a drum stem.
+
+Art Nixon (AtomicNixon) insists on zero credit. The music is his, the faces
+are his, the GPU is his, the thirteen CUDA toolkits of scar tissue are his,
+and the whole thing was his idea. But he insists.
