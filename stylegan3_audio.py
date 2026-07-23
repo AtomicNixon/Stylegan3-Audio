@@ -248,11 +248,67 @@ def save_envelope_plots(envelopes: dict[str, np.ndarray], audio_base: str,
     for name, env in envelopes.items():
         if name.startswith('__'):
             continue
+        safe = ''.join(c if c not in '\\/:*?"<>|' else '_' for c in name)
+        out = os.path.join(data_dir, f'{audio_base}_{safe}.png')
+        if os.path.exists(out):
+            continue
         plt.figure(figsize=(8, 3)); plt.title(name); plt.plot(env)
         plt.tight_layout()
-        safe = ''.join(c if c not in '\\/:*?"<>|' else '_' for c in name)
-        plt.savefig(os.path.join(data_dir, f'{audio_base}_{safe}.png'))
+        plt.savefig(out)
         plt.close()
+
+
+def load_or_build_envelopes(cfg: 'RenderConfig', stem_paths: dict[str, str],
+                            log=print) -> tuple[dict[str, np.ndarray], int, float]:
+    """build_envelopes with an npz cache in data_dir, invalidated when any
+    stem file is newer than the cache."""
+    os.makedirs(cfg.data_dir, exist_ok=True)
+    cache = os.path.join(cfg.data_dir, f'{cfg.audio_base}_envelopes_{cfg.fps}fps.npz')
+    newest = max(os.path.getmtime(p) for p in stem_paths.values() if os.path.exists(p))
+    if os.path.exists(cache) and os.path.getmtime(cache) >= newest:
+        z = np.load(cache)
+        envs = {k: z[k] for k in z.files if not k.startswith('__')}
+        envs['__max_samples__'] = z['__max_samples__']
+        frames = int(z['__frames__'][0])
+        duration = float(z['__duration__'][0])
+        log(f"Envelopes: cache hit ({os.path.basename(cache)})")
+        return envs, frames, duration
+    envs, frames, duration = build_envelopes(stem_paths, cfg.fps, log=log)
+    save = dict(envs)
+    save['__frames__'] = np.array([frames])
+    save['__duration__'] = np.array([duration], dtype=np.float64)
+    np.savez(cache, **save)
+    log(f"Envelopes: built and cached ({os.path.basename(cache)})")
+    return envs, frames, duration
+
+
+def ensure_network(path: str, log=print) -> str:
+    """Return a new-format network pkl path, converting TF-era pickles once.
+
+    New-format pkls (dict with 'G_ema') pass straight through. Old-style
+    pickles are converted via legacy.load_network_pkl and written alongside
+    the original as '<name>-new.pkl' — original untouched. If the converted
+    file already exists, it is used without reconverting."""
+    try:
+        with open(path, 'rb') as f:
+            head = pickle.load(f)
+        if isinstance(head, dict) and 'G_ema' in head:
+            return path
+        reason = f'old container type: {type(head).__name__}'
+    except Exception as ex:  # noqa: BLE001 — TF-era pkls raise on plain unpickle
+        reason = f'plain unpickle failed: {type(ex).__name__}'
+    new_path = os.path.splitext(path)[0] + '-new.pkl'
+    if os.path.exists(new_path):
+        log(f"Old-format pkl ({reason}) — using existing conversion: {new_path}")
+        return new_path
+    log(f"Old-format pkl ({reason}) — converting once via legacy.py …")
+    import legacy as _legacy
+    with open(path, 'rb') as f:
+        data = _legacy.load_network_pkl(f)
+    with open(new_path, 'wb') as f:
+        pickle.dump(data, f)
+    log(f"Converted → {new_path} (original untouched)")
+    return new_path
 
 
 # ---------------------------------------------------------------------------
@@ -331,7 +387,7 @@ def render(cfg: RenderConfig, progress=None, log=print) -> str:
     log(f"Stems: {', '.join(sorted(stems))}")
     report(0.02, 'stems ready')
 
-    envelopes, frames, duration = build_envelopes(stems, cfg.fps, log=log)
+    envelopes, frames, duration = load_or_build_envelopes(cfg, stems, log=log)
     max_samples = int(envelopes.pop('__max_samples__')[0])
     if cfg.max_seconds is not None and cfg.max_seconds < duration:
         frames = int(np.ceil(cfg.max_seconds * cfg.fps))
@@ -353,8 +409,9 @@ def render(cfg: RenderConfig, progress=None, log=print) -> str:
     if not active:
         log("  warning: no active mappings — output will be the bare latent walk")
 
-    log(f"Loading network: {cfg.network}")
-    with open(cfg.network, 'rb') as f:
+    net_path = ensure_network(cfg.network, log=log)
+    log(f"Loading network: {net_path}")
+    with open(net_path, 'rb') as f:
         G = pickle.load(f)['G_ema'].cuda()
     device = torch.device('cuda')
     w_avg = G.mapping.w_avg.float()
