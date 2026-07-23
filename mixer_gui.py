@@ -41,8 +41,17 @@ CLASSIC_ROUTING = {
     'vocals': ('vector', 'mouth_ratio', 1.5, True, 'none'),
 }
 
-TARGET_LEGEND = ('targets:  psi = intensity swing   coarse = identity/pose   '
-                 'mid = structure   fine = texture   vector = latent direction')
+EXPLAINER = (
+    'What the targets do — StyleGAN builds each face through ~16 style layers; '
+    'coarse/mid/fine are bands of them. Louder stem = stronger effect.\n'
+    '  psi      overall intensity: how far the face may swing from the average face  '
+    '(quiet = calm and centered, loud = extreme)\n'
+    '  coarse   layers 0\u20134, the big shapes: identity, head pose, face outline \u2014 '
+    'blended toward a second latent walk\n'
+    '  mid      layers 4\u20138, facial structure: eye/nose/mouth geometry\n'
+    '  fine     layers 8\u201316, the surface: skin texture, hair detail, lighting, color\n'
+    '  vector   push along a chosen direction (age, smile, mouth_ratio\u2026) \u2014 '
+    'stem loudness \u00d7 strength moves that slider')
 
 
 def envelope_thumbnail(env: np.ndarray, w=THUMB_W, h=THUMB_H) -> Image.Image:
@@ -153,6 +162,9 @@ class MixerApp(tk.Tk):
         tk.Label(self.stems_frame, text='Pick a track — stems load themselves.',
                  bg=BG, fg='#888', font=F_MAIN).pack(pady=36)
         self._build_bottom()
+        tk.Label(self, text=EXPLAINER, bg=BG, fg='#8a8', justify='left',
+                 anchor='w', font=F_SMALL).pack(side='bottom', fill='x',
+                                                padx=12, pady=(0, 4))
         # tk Spinbox with values= stomps its textvariable at creation; restore defaults
         self.fps_var.set(60)
         self.size_var.set(512)
@@ -232,8 +244,6 @@ class MixerApp(tk.Tk):
                        fg=FG, selectcolor=BG2, activebackground=BG,
                        font=F_MAIN).pack(side='left', padx=12)
 
-        tk.Label(top, text=TARGET_LEGEND, bg=BG, fg='#8a8',
-                 font=F_SMALL, anchor='w').pack(fill='x', pady=(8, 0))
 
     def _build_bottom(self):
         bottom = tk.Frame(self, bg=BG)
